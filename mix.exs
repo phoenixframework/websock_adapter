@@ -1,22 +1,22 @@
-defmodule WebSock.MixProject do
+defmodule WebSockAdapter.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :websock,
+      app: :websock_adapter,
       version: "0.4.1",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       dialyzer: dialyzer(),
-      name: "WebSock",
-      description: "A specification for WebSocket connections",
-      source_url: "https://github.com/mtrudel/websock",
+      name: "WebSockAdapter",
+      description: "A set of WebSock adapters for common web servers",
+      source_url: "https://github.com/mtrudel/websock_adapter",
       package: [
         files: ["lib", "test", "mix.exs", "README*", "LICENSE*"],
         maintainers: ["Mat Trudel"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/mtrudel/websock"}
+        links: %{"GitHub" => "https://github.com/mtrudel/websock_adapter"}
       ]
     ]
   end
@@ -27,6 +27,7 @@ defmodule WebSock.MixProject do
 
   defp deps do
     [
+      {:websock, "~> 0.4.2"},
       {:plug, "~> 1.14.0"},
       {:plug_cowboy, "~> 2.6"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},

@@ -1,4 +1,4 @@
-defmodule WebSockCowboyAdapterTest do
+defmodule WebSockAdapterCowboyAdapterTest do
   use ExUnit.Case, async: true
 
   defmodule NoopWebSock do
@@ -38,7 +38,7 @@ defmodule WebSockCowboyAdapterTest do
   def call(conn, _opts) do
     conn = Plug.Conn.fetch_query_params(conn)
     websock = conn.query_params["websock"] |> String.to_atom()
-    WebSock.upgrade(conn, websock, [], timeout: 1000)
+    WebSockAdapter.upgrade(conn, websock, [], timeout: 1000)
   end
 
   describe "init" do
@@ -629,7 +629,7 @@ defmodule WebSockCowboyAdapterTest do
     defmodule TerminateWebSock do
       use NoopWebSock
       def handle_in({"normal", opcode: :text}, state), do: {:stop, :normal, state}
-      def terminate(reason, _state), do: WebSockCowboyAdapterTest.send(reason)
+      def terminate(reason, _state), do: WebSockAdapterCowboyAdapterTest.send(reason)
     end
 
     test "is called with :normal on a normal connection shutdown", context do

@@ -1,4 +1,4 @@
-defmodule WebSock.CowboyAdapter do
+defmodule WebSockAdapter.CowboyAdapter do
   @moduledoc false
 
   @behaviour :cowboy_websocket
