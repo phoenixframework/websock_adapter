@@ -20,7 +20,7 @@ The websock_adapter package can be installed by adding `websock_adapter` to your
 ```elixir
 def deps do
   [
-    {:websock_adapter, "~> 0.4.2"}
+    {:websock_adapter, "~> 0.4.3"}
   ]
 end
 ```
