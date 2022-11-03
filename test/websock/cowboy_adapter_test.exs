@@ -141,6 +141,19 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert recv_pong_frame(client) == {:ok, "PONG"}
     end
 
+    defmodule InitListWebSock do
+      use NoopWebSock
+      def init(_opts), do: {:push, [{:pong, "PONG"}, {:text, "TEXT"}], :init}
+    end
+
+    test "can return a list of frames", context do
+      client = tcp_client(context)
+      http1_handshake(client, InitListWebSock)
+
+      assert recv_pong_frame(client) == {:ok, "PONG"}
+      assert recv_text_frame(client) == {:ok, "TEXT"}
+    end
+
     defmodule InitCloseWebSock do
       use NoopWebSock
       def init(_opts), do: {:stop, :normal, :init}
@@ -288,6 +301,21 @@ defmodule WebSockAdapterCowboyAdapterTest do
       send_text_frame(client, "OK")
 
       assert recv_pong_frame(client) == {:ok, "PONG"}
+    end
+
+    defmodule HandleInListWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:push, [{:pong, "PONG"}, {:text, "TEXT"}], state}
+    end
+
+    test "can return a list of frames", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInListWebSock)
+
+      send_text_frame(client, "OK")
+
+      assert recv_pong_frame(client) == {:ok, "PONG"}
+      assert recv_text_frame(client) == {:ok, "TEXT"}
     end
 
     defmodule HandleInCloseWebSock do
@@ -469,6 +497,22 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert recv_pong_frame(client) == {:ok, "PONG"}
     end
 
+    defmodule HandleControlListWebSock do
+      use NoopWebSock
+      def handle_control(_data, state), do: {:push, [{:pong, "PONG"}, {:text, "TEXT"}], state}
+    end
+
+    test "can return a list of frames", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleControlListWebSock)
+
+      send_ping_frame(client, "OK")
+      _ = recv_pong_frame(client)
+
+      assert recv_pong_frame(client) == {:ok, "PONG"}
+      assert recv_text_frame(client) == {:ok, "TEXT"}
+    end
+
     defmodule HandleControlCloseWebSock do
       use NoopWebSock
       def handle_control(_data, state), do: {:stop, :normal, state}
@@ -596,6 +640,25 @@ defmodule WebSockAdapterCowboyAdapterTest do
       Process.send(pid, "OK", [])
 
       assert recv_pong_frame(client) == {:ok, "PONG"}
+    end
+
+    defmodule HandleInfoListWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:push, {:text, :erlang.pid_to_list(self())}, state}
+      def handle_info(_data, state), do: {:push, [{:pong, "PONG"}, {:text, "TEXT"}], state}
+    end
+
+    test "can return a list of frames", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInfoListWebSock)
+
+      send_text_frame(client, "whoami")
+      {:ok, pid} = recv_text_frame(client)
+      pid = pid |> String.to_charlist() |> :erlang.list_to_pid()
+      Process.send(pid, "OK", [])
+
+      assert recv_pong_frame(client) == {:ok, "PONG"}
+      assert recv_text_frame(client) == {:ok, "TEXT"}
     end
 
     defmodule HandleInfoCloseWebSock do
