@@ -22,11 +22,7 @@ defmodule WebSockAdapter.MixProject do
   end
 
   def application do
-    if Mix.env() == :test do
-      [extra_applications: [:cowboy]]
-    else
-      []
-    end
+    []
   end
 
   defp deps do
