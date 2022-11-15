@@ -27,9 +27,9 @@ defmodule WebSockAdapter.MixProject do
 
   defp deps do
     [
-      {:websock, "~> 0.4.3"},
-      {:plug, "~> 1.14.0"},
-      {:bandit, "~> 0.5.9", optional: true},
+      {:websock, "~> 0.4"},
+      {:plug, "~> 1.14"},
+      {:bandit, "~> 0.6", optional: true},
       {:plug_cowboy, "~> 2.6", optional: true},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
