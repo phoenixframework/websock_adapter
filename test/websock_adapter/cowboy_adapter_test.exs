@@ -166,6 +166,32 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert recv_connection_close_frame(client) == {:ok, <<1000::16>>}
       assert connection_closed_for_reading?(client)
     end
+
+    defmodule InitCloseWithCodeWebSock do
+      use NoopWebSock
+      def init(_opts), do: {:stop, :normal, 5555, :init}
+    end
+
+    test "can close a connection by returning a stop tuple with a code", context do
+      client = tcp_client(context)
+      http1_handshake(client, InitCloseWithCodeWebSock)
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule InitCloseWithCodeAndDetailWebSock do
+      use NoopWebSock
+      def init(_opts), do: {:stop, :normal, {5555, "BOOM"}, :init}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and detail", context do
+      client = tcp_client(context)
+      http1_handshake(client, InitCloseWithCodeAndDetailWebSock)
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
+      assert connection_closed_for_reading?(client)
+    end
   end
 
   describe "handle_in" do
@@ -330,6 +356,36 @@ defmodule WebSockAdapterCowboyAdapterTest do
       send_text_frame(client, "OK")
 
       assert recv_connection_close_frame(client) == {:ok, <<1000::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleInCloseWithCodeWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:stop, :normal, 5555, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInCloseWithCodeWebSock)
+
+      send_text_frame(client, "OK")
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleInCloseWithCodeAndDetailWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:stop, :normal, {5555, "BOOM"}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and detail", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInCloseWithCodeAndDetailWebSock)
+
+      send_text_frame(client, "OK")
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
       assert connection_closed_for_reading?(client)
     end
   end
@@ -528,6 +584,38 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert recv_connection_close_frame(client) == {:ok, <<1000::16>>}
       assert connection_closed_for_reading?(client)
     end
+
+    defmodule HandleControlCloseWithCodeWebSock do
+      use NoopWebSock
+      def handle_control(_data, state), do: {:stop, :normal, 5555, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleControlCloseWithCodeWebSock)
+
+      send_ping_frame(client, "OK")
+      _ = recv_pong_frame(client)
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleControlCloseWithCodeAndDetailWebSock do
+      use NoopWebSock
+      def handle_control(_data, state), do: {:stop, :normal, {5555, "BOOM"}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and detail", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleControlCloseWithCodeAndDetailWebSock)
+
+      send_ping_frame(client, "OK")
+      _ = recv_pong_frame(client)
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
+      assert connection_closed_for_reading?(client)
+    end
   end
 
   describe "handle_info" do
@@ -677,6 +765,44 @@ defmodule WebSockAdapterCowboyAdapterTest do
       Process.send(pid, "OK", [])
 
       assert recv_connection_close_frame(client) == {:ok, <<1000::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleInfoCloseWithCodeWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:push, {:text, :erlang.pid_to_list(self())}, state}
+      def handle_info(_data, state), do: {:stop, :normal, 5555, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInfoCloseWithCodeWebSock)
+
+      send_text_frame(client, "whoami")
+      {:ok, pid} = recv_text_frame(client)
+      pid = pid |> String.to_charlist() |> :erlang.list_to_pid()
+      Process.send(pid, "OK", [])
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleInfoCloseWithCodeAndDetailWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:push, {:text, :erlang.pid_to_list(self())}, state}
+      def handle_info(_data, state), do: {:stop, :normal, {5555, "BOOM"}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and detail", context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInfoCloseWithCodeAndDetailWebSock)
+
+      send_text_frame(client, "whoami")
+      {:ok, pid} = recv_text_frame(client)
+      pid = pid |> String.to_charlist() |> :erlang.list_to_pid()
+      Process.send(pid, "OK", [])
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
       assert connection_closed_for_reading?(client)
     end
   end
