@@ -4,7 +4,6 @@
 [![Docs](https://img.shields.io/badge/api-docs-green.svg?style=flat)](https://hexdocs.pm/websock_adapter)
 [![Hex.pm](https://img.shields.io/hexpm/v/websock_adapter.svg?style=flat&color=blue)](https://hex.pm/packages/websock_adapter)
 
-
 WebSockAdapter is a library of adapters from common Web Servers to the
 `WebSock` specification. WebSockAdapter currently supports
 [Bandit](https://github.com/mtrudel/bandit) and

@@ -31,7 +31,7 @@ defmodule WebSockAdapter do
    Defaults to `false`
   * `max_frame_size`: The maximum frame size to accept, in octets. If a frame size larger than this
    is received the connection will be closed. Defaults to `:infinity`
-  * `:fullsweep_after`: The maximum number of garbage collections before forcing a fullsweep of
+  * `fullsweep_after`: The maximum number of garbage collections before forcing a fullsweep of
    the WebSocket connection process. Setting this option requires OTP 24 or newer
   """
   @spec upgrade(Plug.Conn.t(), WebSock.impl(), WebSock.state(), [connection_opt()]) ::
