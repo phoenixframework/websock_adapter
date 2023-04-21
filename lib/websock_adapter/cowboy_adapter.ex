@@ -51,14 +51,28 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     @impl true
     def terminate({:remote, code, _}, _req, {handler, state})
         when code in 1000..1003 or code in 1005..1011 or code == 1015 do
-      handler.terminate(:remote, state)
+      if function_exported?(handler, :terminate, 2) do
+        handler.terminate(:remote, state)
+      end
     end
 
-    def terminate({:remote, :closed}, _req, {handler, state}),
-      do: handler.terminate(:closed, state)
+    def terminate({:remote, :closed}, _req, {handler, state}) do
+      if function_exported?(handler, :terminate, 2) do
+        handler.terminate(:closed, state)
+      end
+    end
 
-    def terminate(:stop, _req, {handler, state}), do: handler.terminate(:normal, state)
-    def terminate(reason, _req, {handler, state}), do: handler.terminate(reason, state)
+    def terminate(:stop, _req, {handler, state}) do
+      if function_exported?(handler, :terminate, 2) do
+        handler.terminate(:normal, state)
+      end
+    end
+
+    def terminate(reason, _req, {handler, state}) do
+      if function_exported?(handler, :terminate, 2) do
+        handler.terminate(reason, state)
+      end
+    end
 
     defp handle_reply({:ok, state}, handler), do: {:ok, {handler, state}}
     defp handle_reply({:push, data, state}, handler), do: {:reply, data, {handler, state}}
