@@ -29,7 +29,7 @@ defmodule WebSockAdapter.MixProject do
     [
       {:websock, "~> 0.5"},
       {:plug, "~> 1.14"},
-      {:bandit, "~> 0.6", optional: true},
+      {:bandit, ">= 0.6.0", optional: true},
       {:plug_cowboy, "~> 2.6", optional: true},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
