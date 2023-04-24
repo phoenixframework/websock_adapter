@@ -1,5 +1,8 @@
 defmodule WebSockAdapterCowboyAdapterTest do
-  use ExUnit.Case, async: true
+  # False due to capture_log raciness
+  use ExUnit.Case, async: false
+
+  import ExUnit.CaptureLog
 
   defmodule NoopWebSock do
     defmacro __using__(_) do
@@ -815,6 +818,27 @@ defmodule WebSockAdapterCowboyAdapterTest do
 
     def send(msg), do: send(__MODULE__, msg)
 
+    defmodule TerminateNoImplWebSock do
+      def init(_), do: {:ok, []}
+      def handle_in({"normal", opcode: :text}, state), do: {:stop, :normal, state}
+    end
+
+    test "callback is optional", context do
+      client = tcp_client(context)
+      http1_handshake(client, TerminateNoImplWebSock)
+
+      warnings =
+        capture_log(fn ->
+          # Get the websock to tell server to shut down
+          send_text_frame(client, "normal")
+
+          # Give our adapter a chance to explode if it's going to
+          Process.sleep(100)
+        end)
+
+      refute warnings =~ "undef"
+    end
+
     defmodule TerminateWebSock do
       use NoopWebSock
       def handle_in({"normal", opcode: :text}, state), do: {:stop, :normal, state}
@@ -825,7 +849,7 @@ defmodule WebSockAdapterCowboyAdapterTest do
       client = tcp_client(context)
       http1_handshake(client, TerminateWebSock)
 
-      # Get the websock to tell bandit to shut down
+      # Get the websock to tell server to shut down
       send_text_frame(client, "normal")
 
       assert_receive :normal
