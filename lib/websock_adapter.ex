@@ -11,6 +11,8 @@ defmodule WebSockAdapter do
           | {:timeout, timeout()}
           | {:max_frame_size, non_neg_integer()}
           | {:fullsweep_after, non_neg_integer()}
+          | {:validate_utf8, boolean()}
+          | {:active_n, integer()}
 
   @doc """
   Upgrades the provided `Plug.Conn` connection request to a `WebSock` connection using the
@@ -50,6 +52,8 @@ defmodule WebSockAdapter do
         {:timeout, timeout} -> [idle_timeout: timeout]
         {:compress, _} = opt -> [opt]
         {:max_frame_size, _} = opt -> [opt]
+        {:validate_utf8, _}  = opt -> [opt]
+        {:active_n, _}       = opt -> [opt]
         _other -> []
       end)
       |> Map.new()
