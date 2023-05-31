@@ -35,6 +35,14 @@ defmodule WebSockAdapter do
    is received the connection will be closed. Defaults to `:infinity`
   * `fullsweep_after`: The maximum number of garbage collections before forcing a fullsweep of
    the WebSocket connection process. Setting this option requires OTP 24 or newer
+  * `validate_utf8`: Whether Cowboy should verify that the payload of text and close frames is valid UTF-8.
+    This is required by the protocol specification but in some cases it may be more interesting to disable it
+    in order to save resources. Note that binary frames do not have this UTF-8 requirement and are what should be
+    used under normal circumstances if necessary.
+  * `active_n`: The number of packets Cowboy will request from the socket at once. This can be used to tweak
+    the performance of the server. Higher values reduce the number of times Cowboy need to request more
+    packets from the port driver at the expense of potentially higher memory being used.
+    This option does not apply to Websocket over HTTP/2.
   """
   @spec upgrade(Plug.Conn.t(), WebSock.impl(), WebSock.state(), [connection_opt()]) ::
           Plug.Conn.t()
