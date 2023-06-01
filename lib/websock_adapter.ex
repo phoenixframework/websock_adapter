@@ -60,8 +60,8 @@ defmodule WebSockAdapter do
         {:timeout, timeout} -> [idle_timeout: timeout]
         {:compress, _} = opt -> [opt]
         {:max_frame_size, _} = opt -> [opt]
-        {:validate_utf8, _}  = opt -> [opt]
-        {:active_n, _}       = opt -> [opt]
+        {:validate_utf8, _} = opt -> [opt]
+        {:active_n, _} = opt -> [opt]
         _other -> []
       end)
       |> Map.new()
