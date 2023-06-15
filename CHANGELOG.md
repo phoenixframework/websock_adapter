@@ -1,5 +1,16 @@
 # Changelog for 0.x
 
+## 0.5.2 (15 Jun 2023)
+
+### Changes
+
+* Allow the sending of some extra options to Cowboy (#9)
+
+### Fixes
+
+* Allow terminate/2 to be optional for Cowboy adapter (#8)
+* Allow nil detail reasons when closing connections in Cowboy
+
 ## 0.5.1 (24 Apr 2023)
 
 ### Changes
