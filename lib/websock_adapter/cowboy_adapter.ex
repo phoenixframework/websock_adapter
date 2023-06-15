@@ -80,6 +80,9 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     defp handle_reply({:reply, _status, data, state}, handler),
       do: {:reply, data, {handler, state}}
 
+    defp handle_reply({:stop, {:shutdown, :restart}, state}, handler),
+      do: {:reply, {:close, _restart_code = 1012, <<>>}, {handler, state}}
+
     defp handle_reply({:stop, _reason, state}, handler), do: {:stop, {handler, state}}
 
     defp handle_reply({:stop, _reason, code, state}, handler) when is_integer(code),
