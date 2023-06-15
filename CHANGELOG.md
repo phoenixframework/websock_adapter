@@ -1,5 +1,11 @@
 # Changelog for 0.x
 
+## 0.5.3 (15 Jun 2023)
+
+### Enhancements
+
+* Support draining signals as used by Phoenix (#10)
+
 ## 0.5.2 (15 Jun 2023)
 
 ### Changes
