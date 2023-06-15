@@ -183,6 +183,19 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert connection_closed_for_reading?(client)
     end
 
+    defmodule InitCloseWithCodeAndNilDetailWebSock do
+      use NoopWebSock
+      def init(_opts), do: {:stop, :normal, {5555, nil}, :init}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and nil detail", context do
+      client = tcp_client(context)
+      http1_handshake(client, InitCloseWithCodeAndNilDetailWebSock)
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
     defmodule InitCloseWithCodeAndDetailWebSock do
       use NoopWebSock
       def init(_opts), do: {:stop, :normal, {5555, "BOOM"}, :init}

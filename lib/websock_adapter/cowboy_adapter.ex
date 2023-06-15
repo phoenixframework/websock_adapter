@@ -85,7 +85,11 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     defp handle_reply({:stop, _reason, code, state}, handler) when is_integer(code),
       do: {:reply, {:close, code, <<>>}, {handler, state}}
 
-    defp handle_reply({:stop, _reason, {code, detail}, state}, handler) when is_integer(code),
-      do: {:reply, {:close, code, detail}, {handler, state}}
+    defp handle_reply({:stop, _reason, {code, nil}, state}, handler) when is_integer(code),
+      do: {:reply, {:close, code, <<>>}, {handler, state}}
+
+    defp handle_reply({:stop, _reason, {code, detail}, state}, handler)
+         when is_integer(code) and is_binary(detail),
+         do: {:reply, {:close, code, detail}, {handler, state}}
   end
 end
