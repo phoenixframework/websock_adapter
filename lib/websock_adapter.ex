@@ -15,10 +15,18 @@ defmodule WebSockAdapter do
           | {:active_n, integer()}
 
   @doc """
-  Upgrades the provided `Plug.Conn` connection request to a `WebSock` connection using the
-  provided `WebSock` compliant module as a handler.
+  Signals an intent to upgrade the provided `Plug.Conn` connection request to a `WebSock`
+  connection using the provided `WebSock` compliant module as a handler.
 
-  This function returns the passed `conn` set to an `:upgraded` state.
+  This function will validate the connection satisfies the conditions laid out in RFC6455§4.2.1.
+
+  If the above checks succeed, this function will return the passed `conn` set to an `:upgraded`
+  state. Note that there is no guarantee that the upgrade has taken place yet; the underlying
+  adapter may (and likely will) choose to defer the upgrade process until after the containing
+  `Plug.Conn.call/2` call has completed.
+
+  If the above checks fail, a `400 Bad Request` will be returned to the client and an error
+  logged.
 
   The provided `state` value will be used as the argument for `c:WebSock.init/1` once the WebSocket
   connection has been successfully negotiated.
