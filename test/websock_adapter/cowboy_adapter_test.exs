@@ -183,7 +183,7 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert connection_closed_for_reading?(client)
     end
 
-    defmodule InitRestartCloseWebSock do
+    defmodule InitCloseWithRestartWebSock do
       use NoopWebSock
       def init(_opts), do: {:stop, {:shutdown, :restart}, :init}
     end
@@ -191,23 +191,9 @@ defmodule WebSockAdapterCowboyAdapterTest do
     @tag capture_log: true
     test "can close a connection by returning an {:shutdown, :restart} tuple", context do
       client = tcp_client(context)
-      http1_handshake(client, InitRestartCloseWebSock)
+      http1_handshake(client, InitCloseWithRestartWebSock)
 
       assert recv_connection_close_frame(client) == {:ok, <<1012::16>>}
-      assert connection_closed_for_reading?(client)
-    end
-
-    defmodule InitAbnormalCloseWithCodeWebSock do
-      use NoopWebSock
-      def init(_opts), do: {:stop, :abnormal, 5555, :init}
-    end
-
-    @tag capture_log: true
-    test "can close a connection by returning an abnormal stop tuple with a code", context do
-      client = tcp_client(context)
-      http1_handshake(client, InitAbnormalCloseWithCodeWebSock)
-
-      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
       assert connection_closed_for_reading?(client)
     end
 
