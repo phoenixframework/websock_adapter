@@ -1,5 +1,12 @@
 # Changelog for 0.x
 
+## 0.5.4 (15 Aug 2023)
+
+### Enhancements
+
+* Add ability to send preamble frames when closing a connection (#13)
+* Improve test coverage (#12)
+
 ## 0.5.3 (15 Jun 2023)
 
 ### Enhancements
