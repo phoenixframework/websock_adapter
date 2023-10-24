@@ -11,6 +11,7 @@ defmodule WebSockAdapter do
           | {:timeout, timeout()}
           | {:max_frame_size, non_neg_integer()}
           | {:fullsweep_after, non_neg_integer()}
+          | {:max_heap_size, :erlang.max_heap_size()}
           | {:validate_utf8, boolean()}
           | {:active_n, integer()}
 
@@ -35,6 +36,8 @@ defmodule WebSockAdapter do
    is received the connection will be closed. Defaults to `:infinity`
   * `fullsweep_after`: The maximum number of garbage collections before forcing a fullsweep of
    the WebSocket connection process. Setting this option requires OTP 24 or newer
+  * `max_heap_size`: The maximum size of the websocket process heap in words, or a configuration
+    map. See `:erlang.max_heap_size()` for more info.
   * `validate_utf8`: Whether Cowboy should verify that the payload of text and close frames is valid UTF-8.
     This is required by the protocol specification but in some cases it may be more interesting to disable it
     in order to save resources. Note that binary frames do not have this UTF-8 requirement and are what should be
@@ -68,7 +71,7 @@ defmodule WebSockAdapter do
 
     process_flags =
       opts
-      |> Keyword.take([:fullsweep_after])
+      |> Keyword.take([:fullsweep_after, :max_heap_size])
       |> Map.new()
 
     {WebSockAdapter.CowboyAdapter, {websock, process_flags, state}, cowboy_opts}
