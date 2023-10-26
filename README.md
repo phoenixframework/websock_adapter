@@ -67,6 +67,18 @@ This simple example illustrates many of the useful features of WebSock / WebSock
 * Upgrades are handled as a plain Plug call. You are able to route requests to
   your upgrade endpoint using all of the power of the Plug API
 
+## Upgrade Validation
+
+Since `0.5.5`, WebSockAdapter validates requests made via
+`WebSockAdapter.upgrade/3` (this was and continues to also be done by the
+underlying web server, but since the server's validation occurs after the
+`Plug.call/2` lifecycle completes it's difficult to meaningfully handle such
+errors). This validation examines the request for conformance to the clauses
+laid out in RFC5455§4.2, as well as RFC8441§5 for HTTP/2 connections. Requests
+which do not satisfy the requirements laid out in those specifications will
+result in a `WebSockAdapter.UpgradeError` being raised, containing
+details of the reason for the failure
+
 ## Installation
 
 The websock_adapter package can be installed by adding `websock_adapter` to your list of dependencies in `mix.exs`:

@@ -19,7 +19,10 @@ defmodule WebSockAdapter do
   Upgrades the provided `Plug.Conn` connection request to a `WebSock` connection using the
   provided `WebSock` compliant module as a handler.
 
-  This function returns the passed `conn` set to an `:upgraded` state.
+  This function returns the passed `conn` set to an `:upgraded` state. If `early_validate_upgrade`
+  is set to true (as it is by default), the request is first examined to determine if it
+  represents a valid WebSocket upgrade. If errors are discovered in the request, a
+  `WebSockAdapter.UpgradeError` is raised containing information about the failure
 
   The provided `state` value will be used as the argument for `c:WebSock.init/1` once the WebSocket
   connection has been successfully negotiated.
@@ -28,6 +31,12 @@ defmodule WebSockAdapter do
   connection. Not all options may be supported by the underlying HTTP server. Possible values are
   as follows:
 
+  * `early_validate_upgrade`: A boolean indicating whether or not WebSockAdapter should attempt to
+  validate the WebSocket upgrade request before returning from this call. The underlying webserver
+  may still perform its own validation during the actual upgrade process, but since this occurs
+  after the `c:Plug.call/2` lifecycle it can be difficult to meaningfully handle failed upgrades.
+  Having WebSockAdapter do its own checks as part of this call helps to alleviate this. Defaults
+  to `true`
   * `timeout`: The number of milliseconds to wait after no client data is received before
    closing the connection. Defaults to `60_000`
   * `compress`: Whether or not to accept negotiation of a compression extension with the client.
@@ -50,7 +59,14 @@ defmodule WebSockAdapter do
   @spec upgrade(Plug.Conn.t(), WebSock.impl(), WebSock.state(), [connection_opt()]) ::
           Plug.Conn.t()
   def upgrade(%{adapter: {adapter, _}} = conn, websock, state, opts) do
-    Plug.Conn.upgrade_adapter(conn, :websocket, tuple_for(adapter, websock, state, opts))
+    # Do this first so we can identify unsupported adapters
+    tuple = tuple_for(adapter, websock, state, opts)
+
+    if Keyword.get(opts, :early_validate_upgrade, true) do
+      WebSockAdapter.UpgradeValidation.validate_upgrade!(conn)
+    end
+
+    Plug.Conn.upgrade_adapter(conn, :websocket, tuple)
   end
 
   defp tuple_for(Bandit.HTTP1.Adapter, websock, state, opts), do: {websock, state, opts}
