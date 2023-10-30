@@ -74,7 +74,7 @@ Since `0.5.5`, WebSockAdapter validates requests made via
 underlying web server, but since the server's validation occurs after the
 `Plug.call/2` lifecycle completes it's difficult to meaningfully handle such
 errors). This validation examines the request for conformance to the clauses
-laid out in RFC5455§4.2, as well as RFC8441§5 for HTTP/2 connections. Requests
+laid out in RFC6455§4.2, as well as RFC8441§5 for HTTP/2 connections. Requests
 which do not satisfy the requirements laid out in those specifications will
 result in a `WebSockAdapter.UpgradeError` being raised, containing
 details of the reason for the failure
