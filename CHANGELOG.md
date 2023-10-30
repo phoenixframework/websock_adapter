@@ -1,4 +1,9 @@
-# Changelog for 0.x
+## 0.5.5 (30 Oct 2023)
+
+### Enhancements
+
+* Add a `:max_heap_size` option (#15, thanks @v0idpwn!)
+* Validate client upgrade request at the time of upgrade (#14)
 
 ## 0.5.4 (15 Aug 2023)
 
