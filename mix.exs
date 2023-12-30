@@ -13,7 +13,7 @@ defmodule WebSockAdapter.MixProject do
       description: "A set of WebSock adapters for common web servers",
       source_url: "https://github.com/phoenixframework/websock_adapter",
       package: [
-        files: ["lib", "test", "mix.exs", "README*", "LICENSE*"],
+        files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG*"],
         maintainers: ["Mat Trudel"],
         licenses: ["MIT"],
         links: %{"GitHub" => "https://github.com/phoenixframework/websock_adapter"}
