@@ -1,3 +1,10 @@
+## 0.5.6 (25 Mar 2024)
+
+### Enhancements
+
+* Support Bandit 1.4+
+* Minor mix packaging improvements
+
 ## 0.5.5 (30 Oct 2023)
 
 ### Enhancements
