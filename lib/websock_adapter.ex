@@ -69,6 +69,8 @@ defmodule WebSockAdapter do
     Plug.Conn.upgrade_adapter(conn, :websocket, tuple)
   end
 
+  defp tuple_for(Bandit.Adapter, websock, state, opts), do: {websock, state, opts}
+  # Support for adapters as specified prior to Bandit 1.4
   defp tuple_for(Bandit.HTTP1.Adapter, websock, state, opts), do: {websock, state, opts}
   defp tuple_for(Bandit.HTTP2.Adapter, websock, state, opts), do: {websock, state, opts}
 
