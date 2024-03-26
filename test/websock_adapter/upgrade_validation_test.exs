@@ -3,7 +3,14 @@ defmodule UpgradeValidationTest do
 
   test "accepts well formed HTTP/1.1 requests" do
     conn =
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.1"}}}
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter,
+           %Bandit.Adapter{
+             transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"},
+             opts: %{websocket: []}
+           }}
+      }
       |> Map.put(:method, "GET")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
@@ -17,7 +24,7 @@ defmodule UpgradeValidationTest do
 
   test "accepts well formed HTTP/2 requests" do
     conn =
-      %Plug.Conn{adapter: {Plug.Cowboy.Conn, %{version: :"HTTP/2"}}}
+      %Plug.Conn{adapter: {Bandit.Adapter, %Bandit.Adapter{transport: %Bandit.HTTP2.Stream{}}}}
       |> Map.put(:method, "CONNECT")
       |> Plug.Conn.put_req_header("sec-websocket-version", "13")
 
@@ -27,7 +34,10 @@ defmodule UpgradeValidationTest do
 
   test "does not accept HTTP/1.0 requests" do
     conn =
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.0"}}}
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter, %Bandit.Adapter{transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.0"}}}
+      }
       |> Map.put(:method, "GET")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
@@ -45,7 +55,10 @@ defmodule UpgradeValidationTest do
 
   test "does not accept non-GET requests" do
     conn =
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.1"}}}
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter, %Bandit.Adapter{transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"}}}
+      }
       |> Map.put(:method, "POST")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
@@ -63,7 +76,10 @@ defmodule UpgradeValidationTest do
 
   test "does not accept non-upgrade requests" do
     conn =
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.1"}}}
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter, %Bandit.Adapter{transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"}}}
+      }
       |> Map.put(:method, "GET")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
@@ -81,7 +97,10 @@ defmodule UpgradeValidationTest do
 
   test "does not accept non-websocket upgrade requests" do
     conn =
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.1"}}}
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter, %Bandit.Adapter{transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"}}}
+      }
       |> Map.put(:method, "GET")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "bogus")
@@ -99,7 +118,10 @@ defmodule UpgradeValidationTest do
 
   test "does not accept HTTP/1.1 requests without a version of 13" do
     conn =
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.1"}}}
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter, %Bandit.Adapter{transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"}}}
+      }
       |> Map.put(:method, "GET")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")

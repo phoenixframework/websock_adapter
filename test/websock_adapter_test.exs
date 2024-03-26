@@ -4,8 +4,15 @@ defmodule WebSockAdapterTest do
   test "upgrades Bandit connections and handles all options" do
     opts = [compress: true, timeout: 1, max_frame_size: 2, fullsweep_after: 3, other: :ok]
 
-    %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, adapter}} =
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.1"}}}
+    %Plug.Conn{adapter: {Bandit.Adapter, adapter}} =
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter,
+           %Bandit.Adapter{
+             transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"},
+             opts: %{websocket: []}
+           }}
+      }
       |> Map.put(:method, "GET")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
@@ -14,7 +21,7 @@ defmodule WebSockAdapterTest do
       |> Plug.Conn.put_req_header("sec-websocket-version", "13")
       |> WebSockAdapter.upgrade(:sock, :arg, opts)
 
-    assert adapter.upgrade == {:websocket, {:sock, :arg, opts}}
+    assert adapter.upgrade == {:websocket, {:sock, :arg, opts}, []}
   end
 
   test "upgrades Cowboy connections and handles all options" do
@@ -38,7 +45,14 @@ defmodule WebSockAdapterTest do
 
   test "raises an error on invalid websocket upgrade requests" do
     assert_raise WebSockAdapter.UpgradeError, "HTTP method POST unsupported", fn ->
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.1"}}}
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter,
+           %Bandit.Adapter{
+             transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"},
+             opts: %{websocket: []}
+           }}
+      }
       |> Map.put(:method, "POST")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
@@ -50,8 +64,15 @@ defmodule WebSockAdapterTest do
   end
 
   test "does not raise an error on invalid websocket upgrade requests if so configured" do
-    %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, adapter}} =
-      %Plug.Conn{adapter: {Bandit.HTTP1.Adapter, %Bandit.HTTP1.Adapter{version: :"HTTP/1.1"}}}
+    %Plug.Conn{adapter: {Bandit.Adapter, adapter}} =
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter,
+           %Bandit.Adapter{
+             transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"},
+             opts: %{websocket: []}
+           }}
+      }
       |> Map.put(:method, "POST")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
@@ -60,7 +81,7 @@ defmodule WebSockAdapterTest do
       |> Plug.Conn.put_req_header("sec-websocket-version", "13")
       |> WebSockAdapter.upgrade(:sock, :arg, early_validate_upgrade: false)
 
-    assert adapter.upgrade == {:websocket, {:sock, :arg, early_validate_upgrade: false}}
+    assert adapter.upgrade == {:websocket, {:sock, :arg, early_validate_upgrade: false}, []}
   end
 
   test "raises an error on unknown adapter upgrade requests" do
