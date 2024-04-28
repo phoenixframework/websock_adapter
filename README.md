@@ -67,6 +67,10 @@ This simple example illustrates many of the useful features of WebSock / WebSock
 * Upgrades are handled as a plain Plug call. You are able to route requests to
   your upgrade endpoint using all of the power of the Plug API
 
+If you're looking for more detail, Benjamin Milde has a [great blog
+post](https://kobrakai.de/kolumne/bare-websockets) that goes a bit deeper than
+the simple example above.
+
 ## Upgrade Validation
 
 Since `0.5.5`, WebSockAdapter validates requests made via
