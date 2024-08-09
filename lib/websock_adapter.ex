@@ -95,6 +95,8 @@ defmodule WebSockAdapter do
     {WebSockAdapter.CowboyAdapter, {websock, process_flags, state}, cowboy_opts}
   end
 
+  defp tuple_for(Plug.Adapters.Test.Conn, websock, state, opts), do: {websock, state, opts}
+
   defp tuple_for(adapter, _websock, _state, _opts),
     do: raise(ArgumentError, "Unknown adapter #{inspect(adapter)}")
 end
