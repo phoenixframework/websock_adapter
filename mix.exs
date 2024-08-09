@@ -4,7 +4,7 @@ defmodule WebSockAdapter.MixProject do
   def project do
     [
       app: :websock_adapter,
-      version: "0.5.6",
+      version: "0.5.7",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
