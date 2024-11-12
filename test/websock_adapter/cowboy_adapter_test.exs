@@ -257,6 +257,28 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
       assert connection_closed_for_reading?(client)
     end
+
+    defmodule InitErrorWebSock do
+      use NoopWebSock
+
+      def init(_opts), do: raise("boom")
+    end
+
+    test "crashes are handled in a manner that Cowboy expects", context do
+      client = tcp_client(context)
+
+      warnings =
+        capture_log(fn ->
+          http1_handshake(client, InitErrorWebSock)
+
+          assert recv_connection_close_frame(client) == {:ok, <<1011::16>>}
+
+          # Give our adapter a chance to explode if it's going to
+          Process.sleep(100)
+        end)
+
+      assert warnings =~ "%RuntimeError{message: \"boom\"}"
+    end
   end
 
   describe "handle_in" do
@@ -522,6 +544,30 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert recv_text_frame(client) == {:ok, "second"}
       assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
       assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleInErrorWebSock do
+      use NoopWebSock
+
+      def handle_in(_data, _state), do: raise("boom")
+    end
+
+    test "crashes are handled in a manner that Cowboy expects", context do
+      client = tcp_client(context)
+
+      http1_handshake(client, HandleInErrorWebSock)
+
+      warnings =
+        capture_log(fn ->
+          send_text_frame(client, "OK")
+
+          assert recv_connection_close_frame(client) == {:ok, <<1011::16>>}
+
+          # Give our adapter a chance to explode if it's going to
+          Process.sleep(100)
+        end)
+
+      assert warnings =~ "%RuntimeError{message: \"boom\"}"
     end
   end
 
@@ -825,6 +871,31 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
       assert connection_closed_for_reading?(client)
     end
+
+    defmodule HandleControlErrorWebSock do
+      use NoopWebSock
+
+      def handle_control(_data, _state), do: raise("boom")
+    end
+
+    test "crashes are handled in a manner that Cowboy expects", context do
+      client = tcp_client(context)
+
+      http1_handshake(client, HandleControlErrorWebSock)
+
+      warnings =
+        capture_log(fn ->
+          send_ping_frame(client, "OK")
+          _ = recv_pong_frame(client)
+
+          assert recv_connection_close_frame(client) == {:ok, <<1011::16>>}
+
+          # Give our adapter a chance to explode if it's going to
+          Process.sleep(100)
+        end)
+
+      assert warnings =~ "%RuntimeError{message: \"boom\"}"
+    end
   end
 
   describe "handle_info" do
@@ -1101,6 +1172,37 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert recv_text_frame(client) == {:ok, "second"}
       assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
       assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleInfoErrorWebSock do
+      use NoopWebSock
+
+      def handle_in(_data, state), do: {:push, {:text, :erlang.pid_to_list(self())}, state}
+
+      def handle_info(_data, _state),
+        do: raise("boom")
+    end
+
+    test "crashes are handled in a manner that Cowboy expects", context do
+      client = tcp_client(context)
+
+      http1_handshake(client, HandleInfoErrorWebSock)
+
+      send_text_frame(client, "whoami")
+      {:ok, pid} = recv_text_frame(client)
+      pid = pid |> String.to_charlist() |> :erlang.list_to_pid()
+
+      warnings =
+        capture_log(fn ->
+          Process.send(pid, "OK", [])
+
+          assert recv_connection_close_frame(client) == {:ok, <<1011::16>>}
+
+          # Give our adapter a chance to explode if it's going to
+          Process.sleep(100)
+        end)
+
+      assert warnings =~ "%RuntimeError{message: \"boom\"}"
     end
   end
 

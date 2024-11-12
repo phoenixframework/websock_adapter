@@ -74,6 +74,12 @@ if Code.ensure_loaded?(:cowboy_websocket) do
       end
     end
 
+    # If websocket_init (or the handler's init) raises an error, state may still
+    # be the 3-element tuple that we get at initialization time. Since we have
+    # not yet initialized the websock at this point, just terminate and let
+    # Cowboy do its usual logging
+    def terminate(_reason, _req, {_handler, _process_flags, _state}), do: :ok
+
     defp handle_reply({:ok, state}, handler), do: {:ok, {handler, state}}
     defp handle_reply({:push, data, state}, handler), do: {:reply, data, {handler, state}}
 
