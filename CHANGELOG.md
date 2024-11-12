@@ -1,3 +1,9 @@
+## 0.5.8 (12 Nov 2024)
+
+### Enhancements
+
+* Improve handling of crashes during WebSock.init/1 calls (#20)
+
 ## 0.5.7 (9 Aug 2024)
 
 ### Enhancements
