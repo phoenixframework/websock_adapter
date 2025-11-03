@@ -85,7 +85,7 @@ defmodule WebSockAdapter do
         {:max_frame_size, _} = opt -> [opt]
         {:validate_utf8, _} = opt -> [opt]
         {:active_n, _} = opt -> [opt]
-        {:deflate_options, _} = opt -> [deflate_opts: opt]
+        {:deflate_options, deflate_options} -> [deflate_opts: deflate_options]
         _other -> []
       end)
       |> Map.new()
