@@ -1,3 +1,9 @@
+## 0.5.9 (4 Nov 2025)
+
+### Enhancements
+
+* Add support for deflate_options configuration (#21, thanks @studzien!)
+
 ## 0.5.8 (12 Nov 2024)
 
 ### Enhancements
