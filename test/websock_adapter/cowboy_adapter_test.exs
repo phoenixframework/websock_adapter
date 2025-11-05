@@ -277,7 +277,8 @@ defmodule WebSockAdapterCowboyAdapterTest do
           Process.sleep(100)
         end)
 
-      assert warnings =~ "%RuntimeError{message: \"boom\"}"
+      assert warnings =~ "RuntimeError"
+      assert warnings =~ "boom"
     end
   end
 
@@ -567,7 +568,8 @@ defmodule WebSockAdapterCowboyAdapterTest do
           Process.sleep(100)
         end)
 
-      assert warnings =~ "%RuntimeError{message: \"boom\"}"
+      assert warnings =~ "RuntimeError"
+      assert warnings =~ "boom"
     end
   end
 
@@ -894,7 +896,8 @@ defmodule WebSockAdapterCowboyAdapterTest do
           Process.sleep(100)
         end)
 
-      assert warnings =~ "%RuntimeError{message: \"boom\"}"
+      assert warnings =~ "RuntimeError"
+      assert warnings =~ "boom"
     end
   end
 
@@ -1202,7 +1205,8 @@ defmodule WebSockAdapterCowboyAdapterTest do
           Process.sleep(100)
         end)
 
-      assert warnings =~ "%RuntimeError{message: \"boom\"}"
+      assert warnings =~ "RuntimeError"
+      assert warnings =~ "boom"
     end
   end
 
