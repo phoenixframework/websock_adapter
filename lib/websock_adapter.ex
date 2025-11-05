@@ -55,6 +55,8 @@ defmodule WebSockAdapter do
     the performance of the server. Higher values reduce the number of times Cowboy need to request more
     packets from the port driver at the expense of potentially higher memory being used.
     This option does not apply to Websocket over HTTP/2
+  * `deflate_options`: A keyword list of options to pass to the deflate library.
+    See `Bandit` or `:cow_ws` documentation for more details
   """
   @spec upgrade(Plug.Conn.t(), WebSock.impl(), WebSock.state(), [connection_opt()]) ::
           Plug.Conn.t()
@@ -83,6 +85,7 @@ defmodule WebSockAdapter do
         {:max_frame_size, _} = opt -> [opt]
         {:validate_utf8, _} = opt -> [opt]
         {:active_n, _} = opt -> [opt]
+        {:deflate_options, deflate_options} -> [deflate_opts: deflate_options]
         _other -> []
       end)
       |> Map.new()
