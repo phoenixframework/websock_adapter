@@ -81,7 +81,9 @@ defmodule WebSockAdapterTest do
       |> Plug.Conn.put_req_header("sec-websocket-version", "13")
       |> WebSockAdapter.upgrade(:sock, :arg, early_validate_upgrade: false)
 
-    assert adapter.upgrade == {:websocket, {:sock, :arg, early_validate_upgrade: false}, []}
+    assert adapter.upgrade ==
+             {:websocket,
+              {:sock, :arg, max_frame_size: 10_000_000, early_validate_upgrade: false}, []}
   end
 
   test "raises an error on unknown adapter upgrade requests" do

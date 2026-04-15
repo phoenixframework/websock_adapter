@@ -42,7 +42,7 @@ defmodule WebSockAdapter do
   * `compress`: Whether or not to accept negotiation of a compression extension with the client.
    Defaults to `false`
   * `max_frame_size`: The maximum frame size to accept, in octets. If a frame size larger than this
-   is received the connection will be closed. Defaults to `:infinity`
+   is received the connection will be closed. Defaults to `10_000_000` (10MB)
   * `fullsweep_after`: The maximum number of garbage collections before forcing a fullsweep of
    the WebSocket connection process. Setting this option requires OTP 24 or newer
   * `max_heap_size`: The maximum size of the websocket process heap in words, or a configuration
@@ -61,6 +61,7 @@ defmodule WebSockAdapter do
   @spec upgrade(Plug.Conn.t(), WebSock.impl(), WebSock.state(), [connection_opt()]) ::
           Plug.Conn.t()
   def upgrade(%{adapter: {adapter, _}} = conn, websock, state, opts) do
+    opts = Keyword.put_new(opts, :max_frame_size, 10_000_000)
     # Do this first so we can identify unsupported adapters
     tuple = tuple_for(adapter, websock, state, opts)
 
