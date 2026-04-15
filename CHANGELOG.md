@@ -1,3 +1,9 @@
+## 0.6.0 (15 Apr 2026)
+
+### Changes
+
+* Change default max_frame_size to be 10MB (was :infinity; #22, thanks @dlindenkreuz!)
+
 ## 0.5.9 (4 Nov 2025)
 
 ### Enhancements
