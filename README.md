@@ -1,7 +1,7 @@
 # WebSockAdapter
 
 [![Build Status](https://github.com/phoenixframework/websock_adapter/workflows/Elixir%20CI/badge.svg)](https://github.com/phoenixframework/websock_adapter/actions)
-[![Docs](https://img.shields.io/badge/api-docs-green.svg?style=flat)](https://hexdocs.pm/websock_adapter)
+[![Docs](https://img.shields.io/badge/api-docs-green.svg?style=flat)](https://websock-adapter.hexdocs.pm)
 [![Hex.pm](https://img.shields.io/hexpm/v/websock_adapter.svg?style=flat&color=blue)](https://hex.pm/packages/websock_adapter)
 
 WebSockAdapter is a library of adapters from common Web Servers to the
@@ -10,7 +10,7 @@ WebSockAdapter is a library of adapters from common Web Servers to the
 [Cowboy](https://github.com/ninenines/cowboy).
 
 For details on the `WebSock` specification, consult the
-[WebSock](https://hexdocs.pm/websock) documentation.
+[WebSock](https://websock-adapter.hexdocs.pm) documentation.
 
 ## Usage
 
@@ -95,7 +95,7 @@ def deps do
 end
 ```
 
-Documentation can be found at <https://hexdocs.pm/websock_adapter>.
+Documentation can be found at <https://websock-adapter.hexdocs.pm>.
 
 ## License
 
