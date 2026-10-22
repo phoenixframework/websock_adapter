@@ -1402,6 +1402,15 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert_receive :remote
     end
 
+    test "is called with :remote on a remote shutdown with an application close code", context do
+      client = tcp_client(context)
+      http1_handshake(client, TerminateWebSock)
+
+      send_connection_close_frame(client, 4000)
+
+      assert_receive :remote
+    end
+
     test "is called with {:error, reason} on a protocol error", context do
       client = tcp_client(context)
       http1_handshake(client, TerminateWebSock)
