@@ -200,6 +200,21 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert connection_closed_for_reading?(client)
     end
 
+    defmodule InitCloseWithCodeAndSingleMessageWebSock do
+      use NoopWebSock
+      def init(_opts), do: {:stop, :normal, 5555, {:text, "only"}, :init}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and a single message",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, InitCloseWithCodeAndSingleMessageWebSock)
+
+      assert recv_text_frame(client) == {:ok, "only"}
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
     defmodule InitCloseWithRestartWebSock do
       use NoopWebSock
       def init(_opts), do: {:stop, {:shutdown, :restart}, :init}
@@ -235,6 +250,20 @@ defmodule WebSockAdapterCowboyAdapterTest do
     test "can close a connection by returning a stop tuple with a code and detail", context do
       client = tcp_client(context)
       http1_handshake(client, InitCloseWithCodeAndDetailWebSock)
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule InitCloseWithCodeAndIodataDetailWebSock do
+      use NoopWebSock
+      def init(_opts), do: {:stop, :normal, {5555, ["BO", ?O, "M"]}, :init}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and iodata detail",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, InitCloseWithCodeAndIodataDetailWebSock)
 
       assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
       assert connection_closed_for_reading?(client)
@@ -481,6 +510,23 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert connection_closed_for_reading?(client)
     end
 
+    defmodule HandleInCloseWithCodeAndSingleMessageWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:stop, :normal, 5555, {:text, "only"}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and a single message",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInCloseWithCodeAndSingleMessageWebSock)
+
+      send_text_frame(client, "OK")
+
+      assert recv_text_frame(client) == {:ok, "only"}
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
     defmodule HandleInCloseWithRestartWebSock do
       use NoopWebSock
       def handle_in(_data, state), do: {:stop, {:shutdown, :restart}, state}
@@ -520,6 +566,22 @@ defmodule WebSockAdapterCowboyAdapterTest do
     test "can close a connection by returning a stop tuple with a code and detail", context do
       client = tcp_client(context)
       http1_handshake(client, HandleInCloseWithCodeAndDetailWebSock)
+
+      send_text_frame(client, "OK")
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleInCloseWithCodeAndIodataDetailWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:stop, :normal, {5555, ["BO", ?O, "M"]}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and iodata detail",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInCloseWithCodeAndIodataDetailWebSock)
 
       send_text_frame(client, "OK")
 
@@ -804,6 +866,24 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert connection_closed_for_reading?(client)
     end
 
+    defmodule HandleControlCloseWithCodeAndSingleMessageWebSock do
+      use NoopWebSock
+      def handle_control(_data, state), do: {:stop, :normal, 5555, {:text, "only"}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and a single message",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleControlCloseWithCodeAndSingleMessageWebSock)
+
+      send_ping_frame(client, "OK")
+      _ = recv_pong_frame(client)
+
+      assert recv_text_frame(client) == {:ok, "only"}
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
     defmodule HandleControlCloseWithRestartWebSock do
       use NoopWebSock
       def handle_control(_data, state), do: {:stop, {:shutdown, :restart}, state}
@@ -845,6 +925,23 @@ defmodule WebSockAdapterCowboyAdapterTest do
     test "can close a connection by returning a stop tuple with a code and detail", context do
       client = tcp_client(context)
       http1_handshake(client, HandleControlCloseWithCodeAndDetailWebSock)
+
+      send_ping_frame(client, "OK")
+      _ = recv_pong_frame(client)
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleControlCloseWithCodeAndIodataDetailWebSock do
+      use NoopWebSock
+      def handle_control(_data, state), do: {:stop, :normal, {5555, ["BO", ?O, "M"]}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and iodata detail",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleControlCloseWithCodeAndIodataDetailWebSock)
 
       send_ping_frame(client, "OK")
       _ = recv_pong_frame(client)
@@ -1094,6 +1191,27 @@ defmodule WebSockAdapterCowboyAdapterTest do
       assert connection_closed_for_reading?(client)
     end
 
+    defmodule HandleInfoCloseWithCodeAndSingleMessageWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:push, {:text, :erlang.pid_to_list(self())}, state}
+      def handle_info(_data, state), do: {:stop, :normal, 5555, {:text, "only"}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and a single message",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInfoCloseWithCodeAndSingleMessageWebSock)
+
+      send_text_frame(client, "whoami")
+      {:ok, pid} = recv_text_frame(client)
+      pid = pid |> String.to_charlist() |> :erlang.list_to_pid()
+      Process.send(pid, "OK", [])
+
+      assert recv_text_frame(client) == {:ok, "only"}
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert connection_closed_for_reading?(client)
+    end
+
     defmodule HandleInfoCloseWithRestartWebSock do
       use NoopWebSock
       def handle_in(_data, state), do: {:push, {:text, :erlang.pid_to_list(self())}, state}
@@ -1142,6 +1260,26 @@ defmodule WebSockAdapterCowboyAdapterTest do
     test "can close a connection by returning a stop tuple with a code and detail", context do
       client = tcp_client(context)
       http1_handshake(client, HandleInfoCloseWithCodeAndDetailWebSock)
+
+      send_text_frame(client, "whoami")
+      {:ok, pid} = recv_text_frame(client)
+      pid = pid |> String.to_charlist() |> :erlang.list_to_pid()
+      Process.send(pid, "OK", [])
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16, "BOOM"::binary>>}
+      assert connection_closed_for_reading?(client)
+    end
+
+    defmodule HandleInfoCloseWithCodeAndIodataDetailWebSock do
+      use NoopWebSock
+      def handle_in(_data, state), do: {:push, {:text, :erlang.pid_to_list(self())}, state}
+      def handle_info(_data, state), do: {:stop, :normal, {5555, ["BO", ?O, "M"]}, state}
+    end
+
+    test "can close a connection by returning a stop tuple with a code and iodata detail",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, HandleInfoCloseWithCodeAndIodataDetailWebSock)
 
       send_text_frame(client, "whoami")
       {:ok, pid} = recv_text_frame(client)

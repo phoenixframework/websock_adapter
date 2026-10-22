@@ -94,8 +94,9 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     defp handle_reply({:stop, _reason, close_detail, state}, handler),
       do: {:reply, close_frame_for_detail(close_detail), {handler, state}}
 
-    defp handle_reply({:stop, _reason, close_detail, messages, state}, handler),
-      do: {:reply, messages ++ [close_frame_for_detail(close_detail)], {handler, state}}
+    defp handle_reply({:stop, _reason, close_detail, messages, state}, handler) do
+      {:reply, List.wrap(messages) ++ [close_frame_for_detail(close_detail)], {handler, state}}
+    end
 
     defp close_frame_for_detail(code) when is_integer(code),
       do: {:close, code, <<>>}
@@ -103,7 +104,8 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     defp close_frame_for_detail({code, nil}) when is_integer(code),
       do: {:close, code, <<>>}
 
-    defp close_frame_for_detail({code, detail}) when is_integer(code) and is_binary(detail),
-      do: {:close, code, detail}
+    defp close_frame_for_detail({code, detail})
+         when is_integer(code) and (is_binary(detail) or is_list(detail)),
+         do: {:close, code, detail}
   end
 end
