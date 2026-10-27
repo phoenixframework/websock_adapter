@@ -67,6 +67,14 @@ if Code.ensure_loaded?(:cowboy_websocket) do
       end
     end
 
+    # The handler asked to stop with a non-normal reason. Cowboy only tells us `:stop` once the
+    # close frame has gone out, so handle_reply/2 stashes the wrapped reason in the state
+    def terminate(_reason, _req, {handler, {:error, _} = reason, state}) do
+      if function_exported?(handler, :terminate, 2) do
+        handler.terminate(reason, state)
+      end
+    end
+
     # If websocket_init (or the handler's init) raises an error, state may still
     # be the 3-element tuple that we get at initialization time. Since we have
     # not yet initialized the websock at this point, just terminate and let
@@ -82,14 +90,29 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     defp handle_reply({:stop, {:shutdown, :restart}, state}, handler),
       do: {:reply, {:close, _restart_code = 1012, <<>>}, {handler, state}}
 
-    defp handle_reply({:stop, _reason, state}, handler), do: {:stop, {handler, state}}
+    defp handle_reply({:stop, :normal, state}, handler), do: {:stop, {handler, state}}
 
-    defp handle_reply({:stop, _reason, close_detail, state}, handler),
-      do: {:reply, close_frame_for_detail(close_detail), {handler, state}}
+    # Phoenix returns this when it disconnects a socket on purpose; it is a normal close
+    defp handle_reply({:stop, {:shutdown, :disconnected}, state}, handler),
+      do: {:stop, {handler, state}}
 
-    defp handle_reply({:stop, _reason, close_detail, messages, state}, handler) do
-      {:reply, List.wrap(messages) ++ [close_frame_for_detail(close_detail)], {handler, state}}
+    defp handle_reply({:stop, reason, state}, handler) do
+      {:reply, {:close, _internal_error_code = 1011, <<>>}, stop_state(handler, reason, state)}
     end
+
+    defp handle_reply({:stop, reason, close_detail, state}, handler),
+      do: {:reply, close_frame_for_detail(close_detail), stop_state(handler, reason, state)}
+
+    defp handle_reply({:stop, reason, close_detail, messages, state}, handler) do
+      frames = List.wrap(messages) ++ [close_frame_for_detail(close_detail)]
+      {:reply, frames, stop_state(handler, reason, state)}
+    end
+
+    # The state Cowboy hands back to terminate/3 after it sends the close frame. A non-normal
+    # reason rides along in the middle slot, mirroring the {handler, process_flags, state} shape
+    # used before init, so the two can never be confused
+    defp stop_state(handler, :normal, state), do: {handler, state}
+    defp stop_state(handler, reason, state), do: {handler, {:error, reason}, state}
 
     defp close_frame_for_detail(code) when is_integer(code),
       do: {:close, code, <<>>}

@@ -1380,6 +1380,23 @@ defmodule WebSockAdapterCowboyAdapterTest do
     defmodule TerminateWebSock do
       use NoopWebSock
       def handle_in({"normal", opcode: :text}, state), do: {:stop, :normal, state}
+      def handle_in({"normal_with_code", opcode: :text}, state), do: {:stop, :normal, 5555, state}
+
+      def handle_in({"disconnected", opcode: :text}, state),
+        do: {:stop, {:shutdown, :disconnected}, state}
+
+      def handle_in({"error", opcode: :text}, state), do: {:stop, :boom, state}
+      def handle_in({"error_with_code", opcode: :text}, state), do: {:stop, :boom, 5555, state}
+
+      def handle_in({"error_with_code_and_messages", opcode: :text}, state),
+        do: {:stop, :boom, 5555, [{:text, "first"}], state}
+
+      def terminate(reason, _state), do: WebSockAdapterCowboyAdapterTest.send(reason)
+    end
+
+    defmodule TerminateInitErrorWebSock do
+      use NoopWebSock
+      def init(_opts), do: {:stop, :boom, :init}
       def terminate(reason, _state), do: WebSockAdapterCowboyAdapterTest.send(reason)
     end
 
@@ -1391,6 +1408,66 @@ defmodule WebSockAdapterCowboyAdapterTest do
       send_text_frame(client, "normal")
 
       assert_receive :normal
+    end
+
+    test "is called with :normal on a normal connection shutdown with a code", context do
+      client = tcp_client(context)
+      http1_handshake(client, TerminateWebSock)
+
+      send_text_frame(client, "normal_with_code")
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert_receive :normal
+    end
+
+    test "is called with :normal on a {:shutdown, :disconnected} shutdown", context do
+      client = tcp_client(context)
+      http1_handshake(client, TerminateWebSock)
+
+      send_text_frame(client, "disconnected")
+
+      assert recv_connection_close_frame(client) == {:ok, <<1000::16>>}
+      assert_receive :normal
+    end
+
+    test "is called with {:error, reason} on a non-normal shutdown", context do
+      client = tcp_client(context)
+      http1_handshake(client, TerminateWebSock)
+
+      send_text_frame(client, "error")
+
+      assert recv_connection_close_frame(client) == {:ok, <<1011::16>>}
+      assert_receive {:error, :boom}
+    end
+
+    test "is called with {:error, reason} on a non-normal shutdown with a code", context do
+      client = tcp_client(context)
+      http1_handshake(client, TerminateWebSock)
+
+      send_text_frame(client, "error_with_code")
+
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert_receive {:error, :boom}
+    end
+
+    test "is called with {:error, reason} on a non-normal shutdown with a code and messages",
+         context do
+      client = tcp_client(context)
+      http1_handshake(client, TerminateWebSock)
+
+      send_text_frame(client, "error_with_code_and_messages")
+
+      assert recv_text_frame(client) == {:ok, "first"}
+      assert recv_connection_close_frame(client) == {:ok, <<5555::16>>}
+      assert_receive {:error, :boom}
+    end
+
+    test "is called with {:error, reason} on a non-normal shutdown from init", context do
+      client = tcp_client(context)
+      http1_handshake(client, TerminateInitErrorWebSock)
+
+      assert recv_connection_close_frame(client) == {:ok, <<1011::16>>}
+      assert_receive {:error, :boom}
     end
 
     test "is called with :remote on a normal remote shutdown", context do
