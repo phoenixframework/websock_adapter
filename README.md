@@ -6,8 +6,9 @@
 
 WebSockAdapter is a library of adapters from common Web Servers to the
 `WebSock` specification. WebSockAdapter currently supports
-[Bandit](https://github.com/mtrudel/bandit) and
-[Cowboy](https://github.com/ninenines/cowboy).
+[Bandit](https://github.com/mtrudel/bandit),
+[Cowboy](https://github.com/ninenines/cowboy) and
+[Roadrunner](https://github.com/arizona-framework/roadrunner).
 
 For details on the `WebSock` specification, consult the
 [WebSock](https://websock-adapter.hexdocs.pm) documentation.

@@ -43,6 +43,24 @@ defmodule WebSockAdapterTest do
                %{compress: true, idle_timeout: 1, max_frame_size: 2}}}
   end
 
+  test "upgrades Roadrunner connections and handles all options" do
+    opts = [compress: true, timeout: 1, max_frame_size: 2, fullsweep_after: 3, other: :ok]
+
+    %Plug.Conn{adapter: {Roadrunner.Plug.Adapter, adapter}} =
+      %Plug.Conn{
+        adapter: {Roadrunner.Plug.Adapter, %{req: %{version: {1, 1}}, send: nil, upgrade: nil}}
+      }
+      |> Map.put(:method, "GET")
+      |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
+      |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
+      |> Plug.Conn.put_req_header("connection", "UpGrAdE")
+      |> Plug.Conn.put_req_header("sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ==")
+      |> Plug.Conn.put_req_header("sec-websocket-version", "13")
+      |> WebSockAdapter.upgrade(:sock, :arg, opts)
+
+    assert adapter.upgrade == {:sock, :arg, opts}
+  end
+
   test "raises an error on invalid websocket upgrade requests" do
     assert_raise WebSockAdapter.UpgradeError, "HTTP method POST unsupported", fn ->
       %Plug.Conn{
