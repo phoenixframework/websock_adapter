@@ -49,16 +49,9 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     end
 
     @impl true
-    def terminate({:remote, code, _}, _req, {handler, state})
-        when code in 1000..1003 or code in 1005..1011 or code == 1015 do
+    def terminate({:remote, _code, _payload}, _req, {handler, state}) do
       if function_exported?(handler, :terminate, 2) do
         handler.terminate(:remote, state)
-      end
-    end
-
-    def terminate({:remote, :closed}, _req, {handler, state}) do
-      if function_exported?(handler, :terminate, 2) do
-        handler.terminate(:closed, state)
       end
     end
 
@@ -94,8 +87,9 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     defp handle_reply({:stop, _reason, close_detail, state}, handler),
       do: {:reply, close_frame_for_detail(close_detail), {handler, state}}
 
-    defp handle_reply({:stop, _reason, close_detail, messages, state}, handler),
-      do: {:reply, messages ++ [close_frame_for_detail(close_detail)], {handler, state}}
+    defp handle_reply({:stop, _reason, close_detail, messages, state}, handler) do
+      {:reply, List.wrap(messages) ++ [close_frame_for_detail(close_detail)], {handler, state}}
+    end
 
     defp close_frame_for_detail(code) when is_integer(code),
       do: {:close, code, <<>>}
@@ -103,7 +97,8 @@ if Code.ensure_loaded?(:cowboy_websocket) do
     defp close_frame_for_detail({code, nil}) when is_integer(code),
       do: {:close, code, <<>>}
 
-    defp close_frame_for_detail({code, detail}) when is_integer(code) and is_binary(detail),
-      do: {:close, code, detail}
+    defp close_frame_for_detail({code, detail})
+         when is_integer(code) and (is_binary(detail) or is_list(detail)),
+         do: {:close, code, detail}
   end
 end
