@@ -1,3 +1,16 @@
+## 0.7.0 (27 Oct 2026)
+
+### Enhancements
+
+* Add Roadrunner adapter support (#27, thanks @williamthome!)
+* Add a simple plug for the basic case of a static handler and state (#23, thanks @LostKobrakai!)
+
+### Fixes
+
+* Report non-normal stop reasons to `terminate/2` as `{:error, reason}` in the Cowboy adapter (#26, thanks @neilberkman!)
+* Accept a single message and iodata close detail in Cowboy stop tuples (#25, thanks @neilberkman!)
+* Report `:remote` for every remote close code in the Cowboy adapter (#25, thanks @neilberkman!)
+
 ## 0.6.0 (15 Apr 2026)
 
 ### Changes
