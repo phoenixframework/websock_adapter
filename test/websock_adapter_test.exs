@@ -1,10 +1,3 @@
-# Stands in for roadrunner_plug's adapter, which needs a newer OTP than this
-# project tests on.
-defmodule Roadrunner.Plug.Adapter do
-  def get_http_protocol(_payload), do: :"HTTP/1.1"
-  def upgrade(payload, :websocket, args), do: {:ok, %{payload | upgrade: args}}
-end
-
 defmodule WebSockAdapterTest do
   use ExUnit.Case, async: true
 
@@ -54,7 +47,9 @@ defmodule WebSockAdapterTest do
     opts = [compress: true, timeout: 1, max_frame_size: 2, fullsweep_after: 3, other: :ok]
 
     %Plug.Conn{adapter: {Roadrunner.Plug.Adapter, adapter}} =
-      %Plug.Conn{adapter: {Roadrunner.Plug.Adapter, %{upgrade: nil}}}
+      %Plug.Conn{
+        adapter: {Roadrunner.Plug.Adapter, %{req: %{version: {1, 1}}, send: nil, upgrade: nil}}
+      }
       |> Map.put(:method, "GET")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
