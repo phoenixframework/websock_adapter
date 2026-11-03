@@ -8,7 +8,8 @@ WebSockAdapter is a library of adapters from common Web Servers to the
 `WebSock` specification. WebSockAdapter currently supports
 [Bandit](https://github.com/mtrudel/bandit),
 [Cowboy](https://github.com/ninenines/cowboy) and
-[Roadrunner](https://github.com/arizona-framework/roadrunner).
+[Roadrunner](https://github.com/arizona-framework/roadrunner). Other servers are
+supported when their `Plug.Conn` adapters implement `WebSockAdapter.ConnAdapter`.
 
 For details on the `WebSock` specification, consult the
 [WebSock](https://websock-adapter.hexdocs.pm) documentation.

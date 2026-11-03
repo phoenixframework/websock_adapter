@@ -2,7 +2,8 @@ defmodule WebSockAdapter do
   @moduledoc """
   Defines adapters to allow common Web Servers to serve applications via the `WebSock` API.
   Also provides a consistent upgrade facility to upgrade `Plug.Conn` requests to `WebSock`
-  connections for supported servers.
+  connections for supported servers, and for servers whose `Plug.Conn` adapters implement
+  `WebSockAdapter.ConnAdapter`.
   """
 
   @typedoc "The type of a supported connection option"
@@ -102,6 +103,12 @@ defmodule WebSockAdapter do
   defp tuple_for(Roadrunner.Plug.Adapter, websock, state, opts), do: {websock, state, opts}
   defp tuple_for(Plug.Adapters.Test.Conn, websock, state, opts), do: {websock, state, opts}
 
-  defp tuple_for(adapter, _websock, _state, _opts),
-    do: raise(ArgumentError, "Unknown adapter #{inspect(adapter)}")
+  defp tuple_for(adapter, websock, state, opts) do
+    if Code.ensure_loaded?(adapter) and function_exported?(adapter, :websock_upgrade?, 0) and
+         adapter.websock_upgrade?() do
+      {websock, state, opts}
+    else
+      raise ArgumentError, "Unknown adapter #{inspect(adapter)}"
+    end
+  end
 end
