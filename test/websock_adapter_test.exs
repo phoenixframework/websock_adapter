@@ -104,9 +104,35 @@ defmodule WebSockAdapterTest do
               {:sock, :arg, max_frame_size: 10_000_000, early_validate_upgrade: false}, []}
   end
 
-  test "raises an error on unknown adapter upgrade requests" do
-    assert_raise ArgumentError, "Unknown adapter OtherServer", fn ->
+  defmodule OtherServer do
+    def get_http_protocol(_payload), do: :"HTTP/1.1"
+    def upgrade(payload, :websocket, args), do: {:ok, Map.put(payload, :upgrade, args)}
+  end
+
+  defmodule UnsupportedServer do
+    def get_http_protocol(_payload), do: :"HTTP/1.1"
+    def upgrade(_payload, _protocol, _args), do: {:error, :not_supported}
+  end
+
+  test "upgrades connections of other adapters with a generic tuple" do
+    %Plug.Conn{adapter: {OtherServer, adapter}} =
       %Plug.Conn{adapter: {OtherServer, %{}}}
+      |> Map.put(:method, "GET")
+      |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
+      |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
+      |> Plug.Conn.put_req_header("connection", "UpGrAdE")
+      |> Plug.Conn.put_req_header("sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ==")
+      |> Plug.Conn.put_req_header("sec-websocket-version", "13")
+      |> WebSockAdapter.upgrade(:sock, :arg, opt_key: :opt_value)
+
+    assert adapter.upgrade == {:sock, :arg, max_frame_size: 10_000_000, opt_key: :opt_value}
+  end
+
+  test "raises an error on upgrade requests to adapters without WebSocket support" do
+    message = "upgrade to websocket not supported by WebSockAdapterTest.UnsupportedServer"
+
+    assert_raise ArgumentError, message, fn ->
+      %Plug.Conn{adapter: {UnsupportedServer, %{}}}
       |> Map.put(:method, "GET")
       |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
       |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
