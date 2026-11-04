@@ -8,7 +8,10 @@ WebSockAdapter is a library of adapters from common Web Servers to the
 `WebSock` specification. WebSockAdapter currently supports
 [Bandit](https://github.com/mtrudel/bandit),
 [Cowboy](https://github.com/ninenines/cowboy) and
-[Roadrunner](https://github.com/arizona-framework/roadrunner).
+[Roadrunner](https://github.com/arizona-framework/roadrunner), as well as any
+other Plug adapter whose `c:Plug.Conn.Adapter.upgrade/3` call accepts a standard
+`{websock, state, opts}` as their third argument when upgrading to a
+`:websocket`.
 
 For details on the `WebSock` specification, consult the
 [WebSock](https://websock-adapter.hexdocs.pm) documentation.

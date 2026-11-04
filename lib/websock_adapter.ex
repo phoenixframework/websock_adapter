@@ -3,6 +3,11 @@ defmodule WebSockAdapter do
   Defines adapters to allow common Web Servers to serve applications via the `WebSock` API.
   Also provides a consistent upgrade facility to upgrade `Plug.Conn` requests to `WebSock`
   connections for supported servers.
+
+  Cowboy needs a dedicated adapter, which this library provides. All other servers get the
+  `{websock, state, opts}` tuple as the argument to `Plug.Conn.upgrade_adapter/3` with a
+  protocol of `:websocket`. To support `WebSock` in a server, make its `Plug.Conn.Adapter`
+  accept this tuple in `c:Plug.Conn.Adapter.upgrade/3`. Bandit and Roadrunner do this.
   """
 
   @typedoc "The type of a supported connection option"
@@ -23,6 +28,9 @@ defmodule WebSockAdapter do
   is set to true (as it is by default), the request is first examined to determine if it
   represents a valid WebSocket upgrade. If errors are discovered in the request, a
   `WebSockAdapter.UpgradeError` is raised containing information about the failure
+
+  If the underlying server does not support WebSocket upgrades, `Plug.Conn.upgrade_adapter/3`
+  raises an `ArgumentError`
 
   The provided `state` value will be used as the argument for `c:WebSock.init/1` once the WebSocket
   connection has been successfully negotiated.
@@ -62,20 +70,14 @@ defmodule WebSockAdapter do
           Plug.Conn.t()
   def upgrade(%{adapter: {adapter, _}} = conn, websock, state, opts) do
     opts = Keyword.put_new(opts, :max_frame_size, 10_000_000)
-    # Do this first so we can identify unsupported adapters
-    tuple = tuple_for(adapter, websock, state, opts)
 
     if Keyword.get(opts, :early_validate_upgrade, true) do
       WebSockAdapter.UpgradeValidation.validate_upgrade!(conn)
     end
 
-    Plug.Conn.upgrade_adapter(conn, :websocket, tuple)
+    # Plug.Conn.upgrade_adapter/3 raises if the adapter does not support WebSocket upgrades
+    Plug.Conn.upgrade_adapter(conn, :websocket, tuple_for(adapter, websock, state, opts))
   end
-
-  defp tuple_for(Bandit.Adapter, websock, state, opts), do: {websock, state, opts}
-  # Support for adapters as specified prior to Bandit 1.4
-  defp tuple_for(Bandit.HTTP1.Adapter, websock, state, opts), do: {websock, state, opts}
-  defp tuple_for(Bandit.HTTP2.Adapter, websock, state, opts), do: {websock, state, opts}
 
   defp tuple_for(Plug.Cowboy.Conn, websock, state, opts) do
     cowboy_opts =
@@ -99,9 +101,6 @@ defmodule WebSockAdapter do
     {WebSockAdapter.CowboyAdapter, {websock, process_flags, state}, cowboy_opts}
   end
 
-  defp tuple_for(Roadrunner.Plug.Adapter, websock, state, opts), do: {websock, state, opts}
-  defp tuple_for(Plug.Adapters.Test.Conn, websock, state, opts), do: {websock, state, opts}
-
-  defp tuple_for(adapter, _websock, _state, _opts),
-    do: raise(ArgumentError, "Unknown adapter #{inspect(adapter)}")
+  # Bandit, Roadrunner, Plug.Adapters.Test.Conn and other servers take this tuple as is
+  defp tuple_for(_adapter, websock, state, opts), do: {websock, state, opts}
 end
