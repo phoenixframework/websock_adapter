@@ -1,3 +1,10 @@
+## 0.7.1 (4 Nov 2026)
+
+### Refactors
+
+* Stop special casing most adapters, relying on the convention of `{websock,
+state, opts}` as their calling tuple (#29, #30, thanks @mat-hek!)
+
 ## 0.7.0 (27 Oct 2026)
 
 ### Enhancements
