@@ -72,10 +72,13 @@ defmodule WebSockAdapter do
     Plug.Conn.upgrade_adapter(conn, :websocket, tuple)
   end
 
-  defp tuple_for(Bandit.Adapter, websock, state, opts), do: {websock, state, opts}
+  defp tuple_for(Bandit.Adapter, websock, state, opts), do: {websock, state, bandit_opts(opts)}
   # Support for adapters as specified prior to Bandit 1.4
-  defp tuple_for(Bandit.HTTP1.Adapter, websock, state, opts), do: {websock, state, opts}
-  defp tuple_for(Bandit.HTTP2.Adapter, websock, state, opts), do: {websock, state, opts}
+  defp tuple_for(Bandit.HTTP1.Adapter, websock, state, opts),
+    do: {websock, state, bandit_opts(opts)}
+
+  defp tuple_for(Bandit.HTTP2.Adapter, websock, state, opts),
+    do: {websock, state, bandit_opts(opts)}
 
   defp tuple_for(Plug.Cowboy.Conn, websock, state, opts) do
     cowboy_opts =
@@ -104,4 +107,12 @@ defmodule WebSockAdapter do
 
   defp tuple_for(adapter, _websock, _state, _opts),
     do: raise(ArgumentError, "Unknown adapter #{inspect(adapter)}")
+
+  # Bandit calls the validate_utf8 option validate_text_frames
+  defp bandit_opts(opts) do
+    case Keyword.pop(opts, :validate_utf8) do
+      {nil, opts} -> opts
+      {validate_utf8, opts} -> Keyword.put(opts, :validate_text_frames, validate_utf8)
+    end
+  end
 end

@@ -24,6 +24,29 @@ defmodule WebSockAdapterTest do
     assert adapter.upgrade == {:websocket, {:sock, :arg, opts}, []}
   end
 
+  test "passes validate_utf8 to Bandit as validate_text_frames" do
+    %Plug.Conn{adapter: {Bandit.Adapter, adapter}} =
+      %Plug.Conn{
+        adapter:
+          {Bandit.Adapter,
+           %Bandit.Adapter{
+             transport: %Bandit.HTTP1.Socket{version: :"HTTP/1.1"},
+             opts: %{websocket: []}
+           }}
+      }
+      |> Map.put(:method, "GET")
+      |> Map.update!(:req_headers, &[{"host", "server.example.com"} | &1])
+      |> Plug.Conn.put_req_header("upgrade", "WeBsOcKeT")
+      |> Plug.Conn.put_req_header("connection", "UpGrAdE")
+      |> Plug.Conn.put_req_header("sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ==")
+      |> Plug.Conn.put_req_header("sec-websocket-version", "13")
+      |> WebSockAdapter.upgrade(:sock, :arg, validate_utf8: false)
+
+    assert {:websocket, {:sock, :arg, opts}, []} = adapter.upgrade
+    assert opts[:validate_text_frames] == false
+    refute Keyword.has_key?(opts, :validate_utf8)
+  end
+
   test "upgrades Cowboy connections and handles all options" do
     opts = [compress: true, timeout: 1, max_frame_size: 2, fullsweep_after: 3, other: :ok]
 
