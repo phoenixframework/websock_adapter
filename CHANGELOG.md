@@ -1,3 +1,9 @@
+## 0.7.2 (9 Nov 2026)
+
+### Changes
+
+* Update roadrunner pin
+
 ## 0.7.1 (4 Nov 2026)
 
 ### Refactors
